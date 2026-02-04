@@ -22,14 +22,15 @@
     Due Date: Monday, February 9th, 2026
 */
 
-/*
-        STEPS:
-        1. READ PM INSTRUCTIONS AND STORE THEM IN AN ARRAY
-        2. MAKE AN IR STRUCT
-        3. HAVE A LOOP THAT EXTRACTS THE INSTRUCTION AND EXECUTES IT (3 INTEGERS PER INSTRUCTION, BASED ON PC)
+
+/* 
+    LO QUE FALTA:
+    - TERMINAR LOS IFS DE SYS (OP 09)
+    - HACER LA FUNCION DEL PRINT
 
 
 */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,6 +48,7 @@ typedef struct IR
 
 // points to next instruction in the text segment
 int PC = 0;
+
 // Pas array declared and every element is initialized to 0
 //  needs text segment, stack segment, unallocated region
 // first instruction occupies 012, second 345
@@ -66,29 +68,49 @@ int base(int BP, int L)
     return arb;
 }
 
+
+//MAIN
 int main(int argc, char *argv[])
 {
     printf("argc = %d\n", argc);
 
-    for (int i = 0; i < 500; i++)
-    {
-        pas[i] = 0;
-    }
-
+   
     for (int i = 0; i < argc; i++)
     {
         printf("argv[%d] = %s\n", i, argv[i]);
-
-        if (argv[i] != "/n")
-        {
-            pas[i] = atoi(argv[i]);
-        }
+        
     }
+
     printf("\n");
     if (argc > 1)
     {
-        int x = atoi(argv[1]); // convert string to int (simple)
-        printf("Converted argv[1] to int: %d\n", x);
+        //File pointer is initialized
+        FILE *fp = NULL;
+
+        //File is opened and read
+        fp = fopen(argv[1], "r");
+
+        //Used to read each number
+        int num;
+        //Counter used to store numbers into pas
+        int count = 0; 
+
+        //As long as each scan is valid, the numbers will get stored in pas
+        while(fscanf(fp, "%d", &num) == 1)
+        {
+            if(num != EOF)
+            {
+                pas[count] = num;
+
+            }
+
+            count++;
+
+        }
+
+        //File pointer is closed
+        fclose(fp);
+
     }
     else
     {
@@ -96,7 +118,8 @@ int main(int argc, char *argv[])
         printf("Try: ./00_args 123\n");
     }
 
-    printf("pas[1] = %d", pas[1]);
+    
+
 
     // points to the base of the current activation record on the stack
     int BP = 480;
@@ -259,18 +282,25 @@ int main(int argc, char *argv[])
 
         if (curInstruction.OP == 9)
         {
+            
             // OUTPUT integer (print)
             if (curInstruction.M == 1)
             {
+                //print int
+                SP--;
             }
             // READ integer
             if (curInstruction.M == 2)
             {
+                SP++;
+                //read int? no entiendo
             }
             // Halt the program
             if (curInstruction.M == 3)
-            {
+            { 
+                break;
             }
+            
         }
     }
 
