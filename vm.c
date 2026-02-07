@@ -25,8 +25,8 @@
 
 /* 
     LO QUE FALTA:
-    - TERMINAR LOS IFS DE SYS (OP 09)
-    - HACER LA FUNCION DEL PRINT
+    - Terminar print
+    - Llamar a print en todos los ifs
 
 
 */
@@ -56,32 +56,23 @@ int PC = 0;
 // from 499 to 481 reserved region
 int pas[500] = {0};
 
-/* Find base L levels down from the current activation record */
-int base(int BP, int L)
-{
-    int arb = BP; // activation record base
-    while (L > 0)
-    {
-        arb = pas[arb]; // follow static link
-        L--;
-    }
-    return arb;
-}
+
+/*IDEA: tenemos dos arrays para hacer el print, */
+
+
+//PROTOTYPES
+int base(int BP, int L);
+void printAll(int SP, int BP, int PC, int OPcode, int arr[], char instr[], char subOP[]);
 
 
 //MAIN
 int main(int argc, char *argv[])
 {
-    printf("argc = %d\n", argc);
+    //para el print
+    char instructions[9] = {"LIT", "OPR", "LOD", "STO", "CAL", "INC", "JMP", "JPC", "SYS"};
+    char OP2instructions[11] = {"RTN", "NEG", "ADD", "SUB", "MUL", "DIV", "EQL", "NEQ", "LSS", "LEQ", "GTR", "GEQ"}; 
+    
 
-   
-    for (int i = 0; i < argc; i++)
-    {
-        printf("argv[%d] = %s\n", i, argv[i]);
-        
-    }
-
-    printf("\n");
     if (argc > 1)
     {
         //File pointer is initialized
@@ -128,6 +119,10 @@ int main(int argc, char *argv[])
 
     // holds the OP,L,M fields of the instruction currently being executed
     IR curInstruction;
+
+    //Prints the Header (that way it doesn't print every time print is called)
+    printf("\t\tL\tM\tPC\tBP\tSP\tstack\n");
+    printf("Initial values:\t\t\t%d\t%d\t%d\n", PC, BP, SP);
 
     // this has to be within a loop, terminating condition SYS 0 3
     while (pas[PC] != 9 && pas[PC + 1] != 0 && pas[PC + 2] != 3)
@@ -227,7 +222,7 @@ int main(int argc, char *argv[])
             }
 
             // GTR greater or equal than
-            if (curInstruction.M == 10)
+            if (curInstruction.M == 11)
             {
                 pas[SP - 1] = (pas[SP - 1] >= pas[SP]);
                 SP--;
@@ -286,14 +281,19 @@ int main(int argc, char *argv[])
             // OUTPUT integer (print)
             if (curInstruction.M == 1)
             {
-                //print int
+               
+                printf("Output result is: %d", pas[SP]);
                 SP--;
             }
             // READ integer
             if (curInstruction.M == 2)
             {
+                int num = 0;
+
+                scanf("Please Enter an Integer: %d", &num);
                 SP++;
-                //read int? no entiendo
+                pas[SP] = num;
+               
             }
             // Halt the program
             if (curInstruction.M == 3)
@@ -305,4 +305,54 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+
+
+
+
+
+
+/* Find base L levels down from the current activation record */
+int base(int BP, int L)
+{
+    int arb = BP; // activation record base
+    while (L > 0)
+    {
+        arb = pas[arb]; // follow static link
+        L--;
+    }
+    return arb;
+}
+
+
+
+
+//char instr[]: contiene los opcodes
+//char subOP[]: contiene los opcodes para OPR
+void printAll(int SP, int BP, int PC, int OPcode, int arr[], char instr[], char subOP[]){
+
+
+    //print function// 
+
+    char instructName = "";
+    
+    for (int i = 1; i < 10; i++){
+
+        if(OPcode == i){
+            instructName = arr[i];
+            break;
+        }
+
+        if (OPcode == i && i == 2){
+
+            //otro loop para buscar el nombre en el otro array
+        }
+    }
+
+
+
+    //print 
+
+
 }
