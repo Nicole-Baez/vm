@@ -22,13 +22,7 @@
     Due Date: Monday, February 9th, 2026
 */
 
-/*
-    LO QUE FALTA:
-    - Terminar print
-    - Llamar a print en todos los ifs
-
-
-*/
+\
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,7 +118,7 @@ int main(int argc, char *argv[])
         // LIT: push literal
         if (curInstruction.OP == 1)
         {
-            SP++;
+            SP--;
             pas[SP] = curInstruction.M;
         }
 
@@ -136,8 +130,8 @@ int main(int argc, char *argv[])
             if (curInstruction.M == 0)
             {
                 SP--;
-                BP = pas[SP + 2];
-                PC = pas[SP + 3];
+                BP = pas[SP - 2];
+                PC = pas[SP - 3];
             }
 
             // NEG negation
@@ -244,7 +238,7 @@ int main(int argc, char *argv[])
         // INC: allocate locals
         if (curInstruction.OP == 6)
         {
-            SP = SP + curInstruction.M;
+            SP = SP - curInstruction.M;
         }
 
         // JMP: unconditional jump
@@ -280,7 +274,7 @@ int main(int argc, char *argv[])
                 printf("Please Enter an Integer: ");
                 scanf("%d", &num);
 
-                SP++;
+                SP--;
                 pas[SP] = num;
             }
             // Halt the program
@@ -327,7 +321,7 @@ void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char su
     instName[3] = '\0';
 
     // print instruction + registers
-    printf("%s \t%d \t%d \t%d \t%d \t%d ", instName, currentIR.L, currentIR.M, PC, BP, SP);
+    printf("%s \t\t %d \t%d \t%d \t%d \t %d \t", instName, currentIR.L, currentIR.M, PC, BP, SP);
     if (SP <= 480)
     {
         for (int i = SP; i <= 480; i++)
