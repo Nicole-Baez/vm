@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
         // LIT: push literal
         if (curInstruction.OP == 1)
         {
-            SP++;
+            SP--;
             pas[SP] = curInstruction.M;
         }
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
             // RTN return subroutine
             if (curInstruction.M == 0)
             {
-                SP--;
+                SP = BP - 1;
                 BP = pas[SP + 2];
                 PC = pas[SP + 3];
             }
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
         // LOD: load to the stack
         if (curInstruction.OP == 3)
         {
-            SP++;
+            SP--;
             pas[SP] = pas[base(BP, curInstruction.L) + curInstruction.M];
         }
 
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
         // INC: allocate locals
         if (curInstruction.OP == 6)
         {
-            SP = SP + curInstruction.M;
+            SP = SP - curInstruction.M;
         }
 
         // JMP: unconditional jump
@@ -259,8 +259,8 @@ int main(int argc, char *argv[])
             if (pas[SP] == 0)
             {
                 PC = curInstruction.M;
-                SP--;
             }
+            SP++;
         }
 
         if (curInstruction.OP == 9)
@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
             {
 
                 printf("Output result is: %d", pas[SP]);
-                SP--;
+                SP++;
             }
             // READ integer
             if (curInstruction.M == 2)
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
                 printf("Please Enter an Integer: ");
                 scanf("%d", &num);
 
-                SP++;
+                SP--;
                 pas[SP] = num;
             }
             // Halt the program
