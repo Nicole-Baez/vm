@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     printf("Initial values:\t\t\t%d\t%d\t%d\n", PC, BP, SP);
 
     // this has to be within a loop, terminating condition SYS 0 3
-    while (!(pas[PC] == 9 && pas[PC + 1] == 0 && pas[PC + 2] == 3))
+    while (1)
     {
 
         curInstruction.OP = pas[PC];
@@ -135,9 +135,9 @@ int main(int argc, char *argv[])
             // RTN return subroutine
             if (curInstruction.M == 0)
             {
-                SP = BP - 1;
-                BP = pas[SP + 2];
-                PC = pas[SP + 3];
+                SP = BP + 1;
+                BP = pas[SP - 2];
+                PC = pas[SP - 3];
             }
 
             // NEG negation
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
             if (curInstruction.M == 4)
             {
                 pas[SP - 1] = pas[SP - 1] * pas[SP];
-                SP--;
+                SP++;
             }
 
             // DIV integer division
@@ -191,8 +191,8 @@ int main(int argc, char *argv[])
             // LSS less-than comparison
             if (curInstruction.M == 8)
             {
-                pas[SP - 1] = (pas[SP - 1] < pas[SP]);
-                SP--;
+                pas[SP + 1] = (pas[SP + 1] < pas[SP]);
+                SP++;
             }
 
             // LEQ less or equal
@@ -228,16 +228,16 @@ int main(int argc, char *argv[])
         if (curInstruction.OP == 4)
         {
             pas[base(BP, curInstruction.L) + curInstruction.M] = pas[SP];
-            SP--;
+            SP++;
         }
 
         if (curInstruction.OP == 5)
         {
-            pas[SP + 1] = base(BP, curInstruction.L);
-            pas[SP + 2] = BP;
-            pas[SP + 3] = PC;
+            pas[SP - 1] = base(BP, curInstruction.L);
+            pas[SP - 2] = BP;
+            pas[SP - 3] = PC;
 
-            BP = SP + 1;
+            BP = SP - 1;
             PC = curInstruction.M;
         }
 
@@ -256,11 +256,12 @@ int main(int argc, char *argv[])
         // JPC: conditional jump
         if (curInstruction.OP == 8)
         {
+            // printf("lalalla%d", pas[SP]);
             if (pas[SP] == 0)
             {
                 PC = curInstruction.M;
+                SP++;
             }
-            SP++;
         }
 
         if (curInstruction.OP == 9)
@@ -270,7 +271,7 @@ int main(int argc, char *argv[])
             if (curInstruction.M == 1)
             {
 
-                printf("Output result is: %d", pas[SP]);
+                printf("Output result is: %d\n", pas[SP]);
                 SP++;
             }
             // READ integer
@@ -283,15 +284,14 @@ int main(int argc, char *argv[])
                 SP--;
                 pas[SP] = num;
             }
-            // Halt the program
-            if (curInstruction.M == 3)
-            {
-                break;
-            }
         }
         printAll(SP, BP, curInstruction, instructions, OP2instructions);
+        // Halt the program
+        if (curInstruction.OP == 9 && curInstruction.M == 3)
+        {
+            break;
+        }
     }
-
     return 0;
 }
 
@@ -327,53 +327,7 @@ void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char su
     instName[3] = '\0';
 
     // print instruction + registers
-    printf("%s \t%d \t%d \t%d \t%d \t%d ", instName, currentIR.L, currentIR.M, PC, BP, SP);
-    if (SP <= 480)
-    {
-        for (int i = SP; i <= 480; i++)
-        {
-
-            // decide if we need a bar before printing pas[i]
-            int tempBP = BP;
-            int printBar = 0;
-
-            // follow dynamic links
-            while (tempBP != 480)
-            {
-                // DL(where is my caller’s frame)
-                int nextBP = pas[tempBP + 1];
-
-                // stops de seguridad
-                if (nextBP <= 0 || nextBP >= 500)
-                {
-                    break;
-                }
-                if (nextBP == tempBP)
-                {
-                    break;
-                }
-                // is i the base if yes print bar
-                if (i == nextBP)
-                {
-                    printBar = 1;
-                    break;
-                }
-
-                tempBP = nextBP;
-            }
-
-            if (printBar)
-            {
-                printf("| ");
-            }
-
-            printf("%d", pas[i]);
-            if (i != 480)
-            {
-                printf(" ");
-            }
-        }
-    }
+    printf("%s \t\t%d \t%d \t%d \t%d \t%d ", instName, currentIR.L, currentIR.M, PC, BP, SP);
 
     printf("\n");
 }
