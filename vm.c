@@ -309,7 +309,7 @@ int base(int BP, int L)
 
 // char instr[]: contiene los opcodes
 // char subOP[]: contiene los opcodes para OPR
-void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4])
+/*void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4])
 {
 
     char instName[4];
@@ -327,7 +327,49 @@ void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char su
     instName[3] = '\0';
 
     // print instruction + registers
-    printf("%s \t\t%d \t%d \t%d \t%d \t%d ", instName, currentIR.L, currentIR.M, PC, BP, SP);
+    printf("%s \t\t%d \t%d \t%d \t%d \t%d\t ", instName, currentIR.L, currentIR.M, PC, BP, SP);
+    int currentAR = BP;
+
+    for (int i = 480; i > SP - 1; i--)
+    {
+        printf("%d ", pas[i]);
+    }
+
+    printf("\n");
+}*/
+
+void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4])
+{
+    char instName[4];
+    const char *src = instr[currentIR.OP];
+
+    // OPR uses sub-operation
+    if (currentIR.OP == 2)
+    {
+        src = subOP[currentIR.M];
+    }
+
+    instName[0] = src[0];
+    instName[1] = src[1];
+    instName[2] = src[2];
+    instName[3] = '\0';
+
+    // print instruction + registers
+    printf("%s\t%d\t%d\t%d\t%d\t%d\t", instName, currentIR.L, currentIR.M, PC, BP, SP);
+
+    // Print stack with bars separating activation records
+    int currentAR = BP;
+    for (int i = 479; i >= SP; i--)
+    {
+        // Print bar before each new activation record
+        if (i == currentAR && currentAR != 480)
+        {
+            printf("| ");
+            // Follow the dynamic link to find the previous AR
+            currentAR = pas[currentAR - 1];
+        }
+        printf("%d ", pas[i]);
+    }
 
     printf("\n");
 }
