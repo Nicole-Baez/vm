@@ -22,15 +22,13 @@
     Due Date: Monday, February 9th, 2026
 */
 
-
-/* 
+/*
     LO QUE FALTA:
     - Terminar print
     - Llamar a print en todos los ifs
 
 
 */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,61 +54,51 @@ int PC = 0;
 // from 499 to 481 reserved region
 int pas[500] = {0};
 
-
 /*IDEA: tenemos dos arrays para hacer el print, */
 
-
-//PROTOTYPES
+// PROTOTYPES
 int base(int BP, int L);
-void printAll(int SP, int BP, int PC, int OPcode, int arr[], char instr[], char subOP[]);
+void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4]);
 
-
-//MAIN
+// MAIN
 int main(int argc, char *argv[])
 {
-    //para el print
-    char instructions[9] = {"LIT", "OPR", "LOD", "STO", "CAL", "INC", "JMP", "JPC", "SYS"};
-    char OP2instructions[11] = {"RTN", "NEG", "ADD", "SUB", "MUL", "DIV", "EQL", "NEQ", "LSS", "LEQ", "GTR", "GEQ"}; 
-    
+    // para el print
+    char instructions[10][4] = {"", "LIT", "OPR", "LOD", "STO", "CAL", "INC", "JMP", "JPC", "SYS"};
+    char OP2instructions[12][4] = {"RTN", "NEG", "ADD", "SUB", "MUL", "DIV", "EQL", "NEQ", "LSS", "LEQ", "GTR", "GEQ"};
 
     if (argc > 1)
     {
-        //File pointer is initialized
+        // File pointer is initialized
         FILE *fp = NULL;
 
-        //File is opened and read
+        // File is opened and read
         fp = fopen(argv[1], "r");
 
-        //Used to read each number
+        // Used to read each number
         int num;
-        //Counter used to store numbers into pas
-        int count = 0; 
+        // Counter used to store numbers into pas
+        int count = 0;
 
-        //As long as each scan is valid, the numbers will get stored in pas
-        while(fscanf(fp, "%d", &num) == 1)
+        // As long as each scan is valid, the numbers will get stored in pas
+        while (fscanf(fp, "%d", &num) == 1)
         {
-            if(num != EOF)
+            if (num != EOF)
             {
                 pas[count] = num;
-
             }
 
             count++;
-
         }
 
-        //File pointer is closed
+        // File pointer is closed
         fclose(fp);
-
     }
     else
     {
         printf("No extra arguments provided.\n");
         printf("Try: ./00_args 123\n");
     }
-
-    
-
 
     // points to the base of the current activation record on the stack
     int BP = 480;
@@ -120,12 +108,12 @@ int main(int argc, char *argv[])
     // holds the OP,L,M fields of the instruction currently being executed
     IR curInstruction;
 
-    //Prints the Header (that way it doesn't print every time print is called)
+    // Prints the Header (that way it doesn't print every time print is called)
     printf("\t\tL\tM\tPC\tBP\tSP\tstack\n");
     printf("Initial values:\t\t\t%d\t%d\t%d\n", PC, BP, SP);
 
     // this has to be within a loop, terminating condition SYS 0 3
-    while (pas[PC] != 9 && pas[PC + 1] != 0 && pas[PC + 2] != 3)
+    while (!(pas[PC] == 9 && pas[PC + 1] == 0 && pas[PC + 2] == 3))
     {
 
         curInstruction.OP = pas[PC];
@@ -277,11 +265,11 @@ int main(int argc, char *argv[])
 
         if (curInstruction.OP == 9)
         {
-            
+
             // OUTPUT integer (print)
             if (curInstruction.M == 1)
             {
-               
+
                 printf("Output result is: %d", pas[SP]);
                 SP--;
             }
@@ -289,29 +277,23 @@ int main(int argc, char *argv[])
             if (curInstruction.M == 2)
             {
                 int num = 0;
+                printf("Please Enter an Integer: ");
+                scanf("%d", &num);
 
-                scanf("Please Enter an Integer: %d", &num);
                 SP++;
                 pas[SP] = num;
-               
             }
             // Halt the program
             if (curInstruction.M == 3)
-            { 
+            {
                 break;
             }
-            
         }
+        printAll(SP, BP, curInstruction, instructions, OP2instructions);
     }
 
     return 0;
 }
-
-
-
-
-
-
 
 /* Find base L levels down from the current activation record */
 int base(int BP, int L)
@@ -325,34 +307,73 @@ int base(int BP, int L)
     return arb;
 }
 
+// char instr[]: contiene los opcodes
+// char subOP[]: contiene los opcodes para OPR
+void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4])
+{
 
+    char instName[4];
+    const char *src = instr[currentIR.OP];
 
+    // OPR uses sub-operation
+    if (currentIR.OP == 2)
+    {
+        src = subOP[currentIR.M];
+    }
 
-//char instr[]: contiene los opcodes
-//char subOP[]: contiene los opcodes para OPR
-void printAll(int SP, int BP, int PC, int OPcode, int arr[], char instr[], char subOP[]){
+    instName[0] = src[0];
+    instName[1] = src[1];
+    instName[2] = src[2];
+    instName[3] = '\0';
 
+    // print instruction + registers
+    printf("%s \t%d \t%d \t%d \t%d \t%d ", instName, currentIR.L, currentIR.M, PC, BP, SP);
+    if (SP <= 480)
+    {
+        for (int i = SP; i <= 480; i++)
+        {
 
-    //print function// 
+            // decide if we need a bar before printing pas[i]
+            int tempBP = BP;
+            int printBar = 0;
 
-    char instructName = "";
-    
-    for (int i = 1; i < 10; i++){
+            // follow dynamic links
+            while (tempBP != 480)
+            {
+                // DL(where is my caller’s frame)
+                int nextBP = pas[tempBP + 1];
 
-        if(OPcode == i){
-            instructName = arr[i];
-            break;
-        }
+                // stops de seguridad
+                if (nextBP <= 0 || nextBP >= 500)
+                {
+                    break;
+                }
+                if (nextBP == tempBP)
+                {
+                    break;
+                }
+                // is i the base if yes print bar
+                if (i == nextBP)
+                {
+                    printBar = 1;
+                    break;
+                }
 
-        if (OPcode == i && i == 2){
+                tempBP = nextBP;
+            }
 
-            //otro loop para buscar el nombre en el otro array
+            if (printBar)
+            {
+                printf("| ");
+            }
+
+            printf("%d", pas[i]);
+            if (i != 480)
+            {
+                printf(" ");
+            }
         }
     }
 
-
-
-    //print 
-
-
+    printf("\n");
 }
