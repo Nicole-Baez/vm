@@ -22,7 +22,7 @@
     Due Date: Monday, February 9th, 2026
 */
 
-\
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,16 +48,59 @@ int PC = 0;
 // from 499 to 481 reserved region
 int pas[500] = {0};
 
-/*IDEA: tenemos dos arrays para hacer el print, */
 
-// PROTOTYPES
-int base(int BP, int L);
-void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4]);
+
+int base(int BP, int L)
+{
+    int arb = BP; // activation record base
+    while (L > 0)
+    {
+        arb = pas[arb]; // follow static link
+        L--;
+    }
+    return arb;
+}
+
+void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4])
+{
+    char instName[4];
+    const char *src = instr[currentIR.OP];
+
+    // OPR uses sub-operation
+    if (currentIR.OP == 2)
+    {
+        src = subOP[currentIR.M];
+    }
+
+    instName[0] = src[0];
+    instName[1] = src[1];
+    instName[2] = src[2];
+    instName[3] = '\0';
+
+    // Print instruction + registers
+    printf("%s\t\t%d\t%d\t%d\t%d\t%d\t", instName, currentIR.L, currentIR.M, PC, BP, SP);
+
+    // Print stack with bars separating activation records
+    int currentAR = BP;
+    for (int i = 480; i >= SP; i--)
+    {
+        // Print bar before each new activation record
+        if (i == currentAR && currentAR != 480)
+        {
+            printf("| ");
+            // Follow the dynamic link to find the previous AR
+            currentAR = pas[currentAR - 1];
+        }
+        printf("%d ", pas[i]);
+    }
+
+    printf("\n");
+}
 
 // MAIN
 int main(int argc, char *argv[])
 {
-    // para el print
+    // For printing
     char instructions[10][4] = {"", "LIT", "OPR", "LOD", "STO", "CAL", "INC", "JMP", "JPC", "SYS"};
     char OP2instructions[12][4] = {"RTN", "NEG", "ADD", "SUB", "MUL", "DIV", "EQL", "NEQ", "LSS", "LEQ", "GTR", "GEQ"};
 
@@ -106,8 +149,8 @@ int main(int argc, char *argv[])
     printf("\t\tL\tM\tPC\tBP\tSP\tstack\n");
     printf("Initial values:\t\t\t%d\t%d\t%d\n", PC, BP, SP);
 
-    // this has to be within a loop, terminating condition SYS 0 3
-    while (!(pas[PC] == 9 && pas[PC + 1] == 0 && pas[PC + 2] == 3))
+    //Infinite loop will run until halting condition is reached
+    while (1)
     {
 
         curInstruction.OP = pas[PC];
@@ -129,7 +172,7 @@ int main(int argc, char *argv[])
             // RTN return subroutine
             if (curInstruction.M == 0)
             {
-                SP--;
+                SP = BP + 1;
                 BP = pas[SP - 2];
                 PC = pas[SP - 3];
             }
@@ -157,8 +200,8 @@ int main(int argc, char *argv[])
             // MUL multiplication
             if (curInstruction.M == 4)
             {
-                pas[SP - 1] = pas[SP - 1] * pas[SP];
-                SP--;
+                pas[SP + 1] = pas[SP + 1] * pas[SP];
+                SP++;
             }
 
             // DIV integer division
@@ -185,8 +228,8 @@ int main(int argc, char *argv[])
             // LSS less-than comparison
             if (curInstruction.M == 8)
             {
-                pas[SP - 1] = (pas[SP - 1] < pas[SP]);
-                SP--;
+                pas[SP + 1] = (pas[SP + 1] < pas[SP]);
+                SP++;
             }
 
             // LEQ less or equal
@@ -214,24 +257,24 @@ int main(int argc, char *argv[])
         // LOD: load to the stack
         if (curInstruction.OP == 3)
         {
-            SP++;
-            pas[SP] = pas[base(BP, curInstruction.L) + curInstruction.M];
+            SP--;
+            pas[SP] = pas[base(BP, curInstruction.L) - curInstruction.M];
         }
 
         // STO: store from stack
         if (curInstruction.OP == 4)
         {
-            pas[base(BP, curInstruction.L) + curInstruction.M] = pas[SP];
-            SP--;
+            pas[base(BP, curInstruction.L) - curInstruction.M] = pas[SP];
+            SP++;
         }
 
         if (curInstruction.OP == 5)
         {
-            pas[SP + 1] = base(BP, curInstruction.L);
-            pas[SP + 2] = BP;
-            pas[SP + 3] = PC;
+            pas[SP - 1] = base(BP, curInstruction.L);
+            pas[SP - 2] = BP;
+            pas[SP - 3] = PC;
 
-            BP = SP + 1;
+            BP = SP - 1;
             PC = curInstruction.M;
         }
 
@@ -250,10 +293,11 @@ int main(int argc, char *argv[])
         // JPC: conditional jump
         if (curInstruction.OP == 8)
         {
+            // printf("lalalla%d", pas[SP]);
             if (pas[SP] == 0)
             {
                 PC = curInstruction.M;
-                SP--;
+                SP++;
             }
         }
 
@@ -264,8 +308,8 @@ int main(int argc, char *argv[])
             if (curInstruction.M == 1)
             {
 
-                printf("Output result is: %d", pas[SP]);
-                SP--;
+                printf("Output result is: %d\n", pas[SP]);
+                SP++;
             }
             // READ integer
             if (curInstruction.M == 2)
@@ -277,97 +321,14 @@ int main(int argc, char *argv[])
                 SP--;
                 pas[SP] = num;
             }
-            // Halt the program
-            if (curInstruction.M == 3)
-            {
-                break;
-            }
         }
         printAll(SP, BP, curInstruction, instructions, OP2instructions);
+        // Halt the program
+        if (curInstruction.OP == 9 && curInstruction.M == 3)
+        {
+            break;
+        }
     }
-
     return 0;
 }
 
-/* Find base L levels down from the current activation record */
-int base(int BP, int L)
-{
-    int arb = BP; // activation record base
-    while (L > 0)
-    {
-        arb = pas[arb]; // follow static link
-        L--;
-    }
-    return arb;
-}
-
-// char instr[]: contiene los opcodes
-// char subOP[]: contiene los opcodes para OPR
-void printAll(int SP, int BP, IR currentIR, const char instr[][4], const char subOP[][4])
-{
-
-    char instName[4];
-    const char *src = instr[currentIR.OP];
-
-    // OPR uses sub-operation
-    if (currentIR.OP == 2)
-    {
-        src = subOP[currentIR.M];
-    }
-
-    instName[0] = src[0];
-    instName[1] = src[1];
-    instName[2] = src[2];
-    instName[3] = '\0';
-
-    // print instruction + registers
-    printf("%s \t\t %d \t%d \t%d \t%d \t %d \t", instName, currentIR.L, currentIR.M, PC, BP, SP);
-    if (SP <= 480)
-    {
-        for (int i = SP; i <= 480; i++)
-        {
-
-            // decide if we need a bar before printing pas[i]
-            int tempBP = BP;
-            int printBar = 0;
-
-            // follow dynamic links
-            while (tempBP != 480)
-            {
-                // DL(where is my caller’s frame)
-                int nextBP = pas[tempBP + 1];
-
-                // stops de seguridad
-                if (nextBP <= 0 || nextBP >= 500)
-                {
-                    break;
-                }
-                if (nextBP == tempBP)
-                {
-                    break;
-                }
-                // is i the base if yes print bar
-                if (i == nextBP)
-                {
-                    printBar = 1;
-                    break;
-                }
-
-                tempBP = nextBP;
-            }
-
-            if (printBar)
-            {
-                printf("| ");
-            }
-
-            printf("%d", pas[i]);
-            if (i != 480)
-            {
-                printf(" ");
-            }
-        }
-    }
-
-    printf("\n");
-}
